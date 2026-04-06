@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -14,12 +14,6 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body data-theme="dark">
-  <!-- Particle Canvas -->
-  <canvas id="particleCanvas"></canvas>
-
-  <!-- Toast Container -->
-  <div class="toast-container" id="toastContainer"></div>
-
   <!-- Loading Screen -->
   <div class="loading-screen" id="loadingScreen">
     <img class="loading-logo" src="https://image2url.com/r2/default/images/1772114193046-733bfa71-77a7-4fdc-bce4-d3e8ebe17a29.png" alt="Logo">
@@ -27,7 +21,7 @@
     <div class="loading-bar-container">
       <div class="loading-bar"></div>
     </div>
-    <p class="loading-text" id="loadingText">loading...</p>
+    <p class="loading-text">loading...</p>
   </div>
 
   <!-- Panic Overlay -->
@@ -36,29 +30,12 @@
     <span>Redirecting to Google Classroom...</span>
   </div>
 
-  <!-- Global Search Overlay -->
-  <div class="search-overlay" id="searchOverlay">
-    <div class="search-overlay-inner">
-      <div class="search-overlay-bar">
-        <i class="fas fa-search"></i>
-        <input type="text" id="globalSearchInput" placeholder="Search games... (Ctrl+K)">
-        <kbd>ESC</kbd>
-      </div>
-      <div class="search-overlay-results" id="searchResults">
-        <div class="search-hint">
-          <i class="fas fa-keyboard"></i>
-          <span>Start typing to search games</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- App -->
   <div class="app">
-    <button class="sidebar-open-btn" id="sidebarOpenBtn"><i class="fas fa-chevron-right"></i></button>
+    <button class="sidebar-open-btn" id="sidebarOpenBtn"><i class="fas fa-chevron-left"></i></button>
     
     <aside class="sidebar" id="sidebar">
-      <button class="sidebar-close-btn" id="sidebarCloseBtn"><i class="fas fa-chevron-left"></i></button>
+      <button class="sidebar-close-btn" id="sidebarCloseBtn"><i class="fas fa-chevron-right"></i></button>
       
       <div class="logo">
         <img src="https://image2url.com/r2/default/images/1772114193046-733bfa71-77a7-4fdc-bce4-d3e8ebe17a29.png" alt="Logo">
@@ -88,60 +65,11 @@
     <div class="main-wrapper" id="mainWrapper">
       <!-- Home -->
       <main class="main" id="homePage">
-        <div class="home-bg-glow"></div>
         <header class="main-header">
-          <p class="greeting-text" id="greetingText"></p>
-          <h1 class="main-title">sight<span class="title-accent">.w</span></h1>
-          <p class="main-subtitle">your spot for stuff — games, media & more</p>
+          <h1 class="main-title">mathixl</h1>
+          <p class="main-subtitle">had to rename sigh.w to sight.math bc the stupid gogaurdina update</p>
         </header>
 
-        <!-- Quick Stats -->
-        <div class="home-stats">
-          <div class="home-stat-card">
-            <div class="stat-icon"><i class="fas fa-gamepad"></i></div>
-            <div class="stat-info">
-              <span class="stat-number" id="totalGamesCount">0</span>
-              <span class="stat-label">Games</span>
-            </div>
-          </div>
-          <div class="home-stat-card">
-            <div class="stat-icon"><i class="fas fa-star"></i></div>
-            <div class="stat-info">
-              <span class="stat-number" id="favGamesCount">0</span>
-              <span class="stat-label">Favorites</span>
-            </div>
-          </div>
-          <div class="home-stat-card">
-            <div class="stat-icon"><i class="fas fa-clock"></i></div>
-            <div class="stat-info">
-              <span class="stat-number" id="visitCount">0</span>
-              <span class="stat-label">Visits</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="home-quick-actions">
-          <button class="quick-action-btn" id="quickPlayBtn">
-            <i class="fas fa-play"></i>
-            <span>Quick Play</span>
-          </button>
-          <button class="quick-action-btn" id="quickRandomBtn">
-            <i class="fas fa-shuffle"></i>
-            <span>Random Game</span>
-          </button>
-          <button class="quick-action-btn" id="quickFavsBtn">
-            <i class="fas fa-star"></i>
-            <span>My Favorites</span>
-          </button>
-          <button class="quick-action-btn search-shortcut-btn" id="quickSearchBtn">
-            <i class="fas fa-search"></i>
-            <span>Search</span>
-            <kbd class="kbd-hint">Ctrl+K</kbd>
-          </button>
-        </div>
-
-        <!-- Info Boxes -->
         <div class="home-boxes">
           <div class="info-box">
             <div class="info-box-header">
@@ -150,10 +78,9 @@
             </div>
             <div class="info-box-content">
               <ul>
-                <li><span class="update-badge">NEW</span> enhanced UI with particles & animations</li>
-                <li><span class="update-badge">NEW</span> favorites system — bookmark your games</li>
-                <li>added gn.math games as backup</li>
-                <li>added widgetbot.io chat</li>
+                <li>added gn.math games</li>
+                <li>added widgetbot.io</li>
+                <li>removed shortcuts — reason why extra lines of code</li>
               </ul>
             </div>
           </div>
@@ -169,13 +96,6 @@
           </div>
         </div>
 
-        <!-- Featured Games -->
-        <div class="featured-section">
-          <div class="featured-header">
-            <h2><i class="fas fa-bolt"></i> Popular Games</h2>
-          </div>
-          <div class="featured-grid" id="featuredGrid"></div>
-        </div>
       </main>
 
       <!-- Activities -->
@@ -189,7 +109,6 @@
                 <h3 class="games-option-title">Games</h3>
                 <p class="games-option-desc">SALMON games</p>
               </div>
-              <span class="recommended-badge">HOT</span>
             </div>
             <div class="games-option" id="secondGamesBtn">
               <div class="games-option-icon"><i class="fas fa-fire"></i></div>
@@ -197,14 +116,12 @@
                 <h3 class="games-option-title">Games 2</h3>
                 <p class="games-option-desc">iconic games</p>
               </div>
-              <span class="games-count-badge" id="games2Count">200+ games</span>
             </div>
             <div class="games-option" id="thirdGamesBtn">
               <div class="games-option-icon"><i class="fas fa-bolt"></i></div>
               <div class="games-option-info">
                 <h3 class="games-option-title">gn-math</h3>
               </div>
-              <span class="recommended-badge">BACKUP</span>
             </div>
           </div>
         </div>
@@ -227,15 +144,6 @@
         <div class="second-games" id="secondGamesContainer" style="display: none;">
           <div class="second-games-header">
             <input type="text" class="second-games-search" id="gamesSearchInput" placeholder="Search games...">
-            <div class="filter-tabs" id="filterTabs">
-              <button class="filter-tab active" data-filter="all">All</button>
-              <button class="filter-tab" data-filter="favorites"><i class="fas fa-star"></i> Favs</button>
-              <button class="filter-tab" data-filter="a-e">A-E</button>
-              <button class="filter-tab" data-filter="f-j">F-J</button>
-              <button class="filter-tab" data-filter="k-o">K-O</button>
-              <button class="filter-tab" data-filter="p-t">P-T</button>
-              <button class="filter-tab" data-filter="u-z">U-Z</button>
-            </div>
           </div>
           <div class="second-games-grid" id="gamesGrid"></div>
         </div>
@@ -245,7 +153,6 @@
           <header class="game-player-header">
             <h2 class="game-player-title"><i class="fas fa-gamepad"></i> <span id="gamePlayerTitle">Game</span></h2>
             <div class="game-player-btns">
-              <button class="fullpage-btn fav-toggle-btn" id="gamePlayerFav"><i class="far fa-star"></i></button>
               <button class="fullpage-btn" id="gamePlayerReload"><i class="fas fa-rotate-right"></i> Reload</button>
               <button class="fullpage-btn accent-btn" id="gamePlayerEmbed"><i class="fas fa-code"></i> Embed</button>
               <button class="fullpage-btn" id="gamePlayerBack"><i class="fas fa-arrow-left"></i> Back</button>
@@ -253,7 +160,7 @@
           </header>
           <div class="game-player-body">
             <div class="game-player-loading" id="gamePlayerLoading">
-              <div class="loading-spinner"></div>
+              <i class="fas fa-circle-notch"></i>
               <span>Loading the game...</span>
             </div>
             <div class="pointer-lock-hint" id="pointerLockHint">Click game to lock mouse | Press ESC to release</div>
@@ -387,6 +294,7 @@
               <button class="cloak-btn" data-cloak="docs"><img src="https://docs.google.com/favicon.ico" alt="">Docs</button>
               <button class="cloak-btn" data-cloak="slides"><img src="https://slides.google.com/favicon.ico" alt="">Slides</button>
               <button class="cloak-btn" data-cloak="classroom"><img src="https://classroom.google.com/favicon.ico" alt="">Classroom</button>
+
             </div>
           </div>
 
@@ -397,13 +305,9 @@
               <span class="toggle-text">Animations <small>Smooth transitions & effects</small></span>
               <button class="toggle-switch on" id="toggleAnimations"></button>
             </div>
-            <div class="toggle-row">
+                        <div class="toggle-row">
               <span class="toggle-text">Compact Mode <small>Smaller cards & tighter spacing</small></span>
               <button class="toggle-switch" id="toggleCompact"></button>
-            </div>
-            <div class="toggle-row">
-              <span class="toggle-text">Particles <small>Ambient floating particles</small></span>
-              <button class="toggle-switch on" id="toggleParticles"></button>
             </div>
           </div>
 
@@ -417,29 +321,6 @@
             <div class="toggle-row">
               <span class="toggle-text">Stealth Mode <small>Block analytics & tracking</small></span>
               <button class="toggle-switch" id="toggleStealth"></button>
-            </div>
-          </div>
-
-          <!-- Keyboard Shortcuts -->
-          <div class="settings-section">
-            <h3 class="settings-section-title"><i class="fas fa-keyboard"></i> Shortcuts</h3>
-            <div class="shortcuts-grid">
-              <div class="shortcut-item">
-                <span class="shortcut-desc">Search Games</span>
-                <div class="shortcut-keys"><kbd>Ctrl</kbd><kbd>K</kbd></div>
-              </div>
-              <div class="shortcut-item">
-                <span class="shortcut-desc">Toggle Sidebar</span>
-                <div class="shortcut-keys"><kbd>Ctrl</kbd><kbd>B</kbd></div>
-              </div>
-              <div class="shortcut-item">
-                <span class="shortcut-desc">Go Home</span>
-                <div class="shortcut-keys"><kbd>Ctrl</kbd><kbd>H</kbd></div>
-              </div>
-              <div class="shortcut-item">
-                <span class="shortcut-desc">Panic Key</span>
-                <div class="shortcut-keys"><kbd id="shortcutPanicDisplay">P</kbd></div>
-              </div>
             </div>
           </div>
 
