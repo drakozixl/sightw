@@ -3,136 +3,8 @@ const $all = sel => document.querySelectorAll(sel);
 
 const store = {
   get: key => { try { return localStorage.getItem(key); } catch(e) { return null; } },
-  set: (key, val) => { try { localStorage.setItem(key, val); } catch(e) {} },
-  getJSON: key => { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { return []; } },
-  setJSON: (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {} }
+  set: (key, val) => { try { localStorage.setItem(key, val); } catch(e) {} }
 };
-
-// Toast System
-function showToast(type, title, msg, duration = 3000) {
-  const container = $('toastContainer');
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.innerHTML = `
-    <div class="toast-icon ${type}">
-      <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'xmark' : type === 'warning' ? 'exclamation' : 'info'}"></i>
-    </div>
-    <div class="toast-body">
-      <div class="toast-title">${title}</div>
-      <div class="toast-msg">${msg}</div>
-    </div>
-  `;
-  toast.onclick = () => removeToast(toast);
-  container.appendChild(toast);
-  setTimeout(() => removeToast(toast), duration);
-}
-
-function removeToast(toast) {
-  if (!toast.parentNode) return;
-  toast.classList.add('removing');
-  setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
-}
-
-// Particle System
-function initParticles() {
-  const canvas = $('particleCanvas');
-  const ctx = canvas.getContext('2d');
-  let particles = [];
-  let animationId;
-  let mouseX = 0, mouseY = 0;
-
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  document.addEventListener('mousemove', e => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-  });
-
-  class Particle {
-    constructor() {
-      this.reset();
-    }
-    reset() {
-      this.x = Math.random() * canvas.width;
-      this.y = Math.random() * canvas.height;
-      this.size = Math.random() * 2 + 0.5;
-      this.speedX = (Math.random() - 0.5) * 0.5;
-      this.speedY = (Math.random() - 0.5) * 0.5;
-      this.opacity = Math.random() * 0.5 + 0.1;
-      this.hue = Math.random() * 60 - 30;
-    }
-    update() {
-      const dx = mouseX - this.x;
-      const dy = mouseY - this.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < 150) {
-        const force = (150 - dist) / 150 * 0.02;
-        this.speedX += dx * force * 0.01;
-        this.speedY += dy * force * 0.01;
-      }
-      this.x += this.speedX;
-      this.y += this.speedY;
-      this.speedX *= 0.99;
-      this.speedY *= 0.99;
-      if (this.x < -10 || this.x > canvas.width + 10 || this.y < -10 || this.y > canvas.height + 10) {
-        this.reset();
-      }
-    }
-    draw() {
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-      const style = getComputedStyle(document.body);
-      const accent = style.getPropertyValue('--accent').trim() || '#8b5cf6';
-      ctx.fillStyle = accent;
-      ctx.globalAlpha = this.opacity;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    }
-  }
-
-  const count = Math.min(80, Math.floor((canvas.width * canvas.height) / 15000));
-  for (let i = 0; i < count; i++) {
-    particles.push(new Particle());
-  }
-
-  function drawLines() {
-    const style = getComputedStyle(document.body);
-    const accent = style.getPropertyValue('--accent').trim() || '#8b5cf6';
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i + 1; j < particles.length; j++) {
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 120) {
-          ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = accent;
-          ctx.globalAlpha = (1 - dist / 120) * 0.08;
-          ctx.lineWidth = 0.5;
-          ctx.stroke();
-          ctx.globalAlpha = 1;
-        }
-      }
-    }
-  }
-
-  function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => { p.update(); p.draw(); });
-    drawLines();
-    animationId = requestAnimationFrame(animate);
-  }
-  animate();
-
-  window._stopParticles = () => { cancelAnimationFrame(animationId); };
-  window._startParticles = () => { animate(); };
-}
 
 const gamesData = [
   { "name": "1v1lol", "image": "logo.png", "url": "1v1lol" },
@@ -443,69 +315,7 @@ const cloakConfig = {
 };
 
 let currentGameUrl = '';
-let currentGameName = '';
-let selectedSearchIndex = -1;
-let currentFilter = 'all';
 
-// Featured games for home page
-const featuredGames = [
-  '1v1lol', 'slope', 'cookie-clicker', 'retro-bowl', 'motox3m',
-  'drift-hunters', 'krunker', 'ovo', 'fridaynightfunkin', 'minecraft-classic',
-  'google-snake', 'doodle-jump', 'smashkarts', 'crossyroad', 'subway-surfers'
-];
-
-// Favorites
-function getFavorites() {
-  return store.getJSON('favorites');
-}
-
-function toggleFavorite(url) {
-  let favs = getFavorites();
-  const idx = favs.indexOf(url);
-  if (idx > -1) {
-    favs.splice(idx, 1);
-    showToast('info', 'Removed', 'Game removed from favorites');
-  } else {
-    favs.push(url);
-    showToast('success', 'Favorited', 'Game added to favorites');
-  }
-  store.setJSON('favorites', favs);
-  updateFavCount();
-  updateFavButtons();
-}
-
-function isFavorite(url) {
-  return getFavorites().includes(url);
-}
-
-function updateFavCount() {
-  const count = getFavorites().length;
-  if ($('favGamesCount')) $('favGamesCount').textContent = count;
-}
-
-function updateFavButtons() {
-  // Update game cards
-  $all('.game-card').forEach(card => {
-    const url = card.dataset.url;
-    const favBtn = card.querySelector('.game-card-fav');
-    if (favBtn) {
-      favBtn.classList.toggle('is-fav', isFavorite(url));
-      favBtn.innerHTML = isFavorite(url) ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
-    }
-  });
-  // Update game player fav button
-  if (currentGameUrl) {
-    const btn = $('gamePlayerFav');
-    if (btn) {
-      btn.classList.toggle('is-fav', isFavorite(currentGameUrl));
-      btn.innerHTML = isFavorite(currentGameUrl) ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
-    }
-  }
-}
-
-// ============================
-// Initialization
-// ============================
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initCloak();
@@ -515,243 +325,11 @@ document.addEventListener('DOMContentLoaded', () => {
   initKeys();
   initStats();
   initPointerLock();
-  initSearch();
-  initQuickActions();
-  initParticles();
   updateTime();
-  updateGreeting();
-  updateHomeStats();
-  renderFeaturedGames();
   setInterval(updateTime, 1000);
-
-  // Animated loading text
-  const loadingTexts = ['loading games...', 'connecting...', 'almost there...', 'ready!'];
-  let loadIdx = 0;
-  const loadInterval = setInterval(() => {
-    loadIdx++;
-    if (loadIdx < loadingTexts.length) {
-      $('loadingText').textContent = loadingTexts[loadIdx];
-    }
-  }, 300);
-
-  setTimeout(() => {
-    clearInterval(loadInterval);
-    $('loadingScreen').classList.add('hidden');
-  }, 1400);
-
-  // Visit counter
-  let visits = parseInt(store.get('visits') || '0') + 1;
-  store.set('visits', visits);
-  if ($('visitCount')) $('visitCount').textContent = visits;
-
-  $('games2Count').textContent = `${gamesData.length} games`;
-  updateFavCount();
+  setTimeout(() => $('loadingScreen').classList.add('hidden'), 1200);
 });
 
-// ============================
-// Greeting
-// ============================
-function updateGreeting() {
-  const hour = new Date().getHours();
-  let greeting;
-  if (hour < 6) greeting = "night owl detected 🦉";
-  else if (hour < 12) greeting = "good morning ☀️";
-  else if (hour < 17) greeting = "good afternoon 🌤️";
-  else if (hour < 21) greeting = "good evening 🌅";
-  else greeting = "good night 🌙";
-  $('greetingText').textContent = greeting;
-}
-
-// ============================
-// Home Stats
-// ============================
-function updateHomeStats() {
-  if ($('totalGamesCount')) $('totalGamesCount').textContent = gamesData.length;
-  updateFavCount();
-}
-
-// ============================
-// Featured Games
-// ============================
-function renderFeaturedGames() {
-  const grid = $('featuredGrid');
-  const favs = getFavorites();
-  grid.innerHTML = featuredGames.map(url => {
-    const game = gamesData.find(g => g.url === url);
-    if (!game) return '';
-    const isFav = favs.includes(game.url);
-    return `
-      <div class="featured-card" data-url="${game.url}" data-name="${game.name}">
-        <img src="${GAME_BASE}/${game.url}/${game.image}" alt="${game.name}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect fill=%22%2312121a%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23888%22 font-size=%2214%22>${encodeURIComponent(game.name.charAt(0))}</text></svg>'">
-        <div class="featured-card-name">${game.name}</div>
-        <div class="featured-card-fav ${isFav ? 'is-fav' : ''}" data-fav-url="${game.url}">
-          <i class="${isFav ? 'fas' : 'far'} fa-star"></i>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  // Click handlers
-  grid.querySelectorAll('.featured-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      if (e.target.closest('.featured-card-fav')) return;
-      openGameFromFeatured(card.dataset.url, card.dataset.name);
-    });
-  });
-
-  grid.querySelectorAll('.featured-card-fav').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleFavorite(btn.dataset.favUrl);
-      const isFav = isFavorite(btn.dataset.favUrl);
-      btn.classList.toggle('is-fav', isFav);
-      btn.innerHTML = `<i class="${isFav ? 'fas' : 'far'} fa-star"></i>`;
-    });
-  });
-}
-
-function openGameFromFeatured(url, name) {
-  // Go to games page -> second games -> open game
-  $('homePage').style.display = 'none';
-  $('gamesPage').classList.add('active');
-  $('gamesMenu').style.display = 'none';
-  $('gamesHeader').style.display = 'flex';
-  $('gamesBack').style.display = 'flex';
-  $('gamesReload').style.display = 'none';
-  $('secondGamesContainer').style.display = 'block';
-  $all('.nav-link').forEach(l => l.classList.remove('active'));
-  $('gamesLink').classList.add('active');
-
-  currentGameUrl = url;
-  currentGameName = name;
-  $('gamePlayerTitle').textContent = name;
-  $('secondGamesContainer').style.display = 'none';
-  $('gamePlayerView').classList.add('active');
-  $('gamePlayerLoading').classList.remove('hidden');
-  $('gamePlayerIframe').src = `${GAME_BASE}/${url}/`;
-  updateFavButtons();
-}
-
-// ============================
-// Quick Actions
-// ============================
-function initQuickActions() {
-  $('quickPlayBtn').onclick = () => {
-    // Open a random popular game
-    const randomFeatured = featuredGames[Math.floor(Math.random() * featuredGames.length)];
-    const game = gamesData.find(g => g.url === randomFeatured);
-    if (game) openGameFromFeatured(game.url, game.name);
-  };
-
-  $('quickRandomBtn').onclick = () => {
-    const randomGame = gamesData[Math.floor(Math.random() * gamesData.length)];
-    showToast('info', 'Random Game', `Loading ${randomGame.name}...`);
-    openGameFromFeatured(randomGame.url, randomGame.name);
-  };
-
-  $('quickFavsBtn').onclick = () => {
-    const favs = getFavorites();
-    if (favs.length === 0) {
-      showToast('warning', 'No Favorites', 'Star some games to add them here!');
-      return;
-    }
-    const randomFav = favs[Math.floor(Math.random() * favs.length)];
-    const game = gamesData.find(g => g.url === randomFav);
-    if (game) {
-      showToast('success', 'Playing Favorite', `Loading ${game.name}...`);
-      openGameFromFeatured(game.url, game.name);
-    }
-  };
-
-  $('quickSearchBtn').onclick = () => toggleSearch();
-}
-
-// ============================
-// Global Search
-// ============================
-function initSearch() {
-  const input = $('globalSearchInput');
-  const overlay = $('searchOverlay');
-  const results = $('searchResults');
-
-  input.addEventListener('input', () => {
-    const q = input.value.toLowerCase().trim();
-    selectedSearchIndex = -1;
-    if (q.length === 0) {
-      results.innerHTML = '<div class="search-hint"><i class="fas fa-keyboard"></i><span>Start typing to search games</span></div>';
-      return;
-    }
-    const matches = gamesData.filter(g => g.name.toLowerCase().includes(q)).slice(0, 12);
-    const favs = getFavorites();
-    if (matches.length === 0) {
-      results.innerHTML = '<div class="search-no-results"><i class="fas fa-search" style="font-size:24px;opacity:0.3;margin-bottom:8px;display:block"></i>No games found</div>';
-      return;
-    }
-    results.innerHTML = matches.map((g, i) => `
-      <div class="search-result-item" data-url="${g.url}" data-name="${g.name}" data-index="${i}">
-        <img src="${GAME_BASE}/${g.url}/${g.image}" alt="${g.name}" onerror="this.style.display='none'">
-        <div class="result-info">
-          <div class="result-name">${g.name}</div>
-          <div class="result-url">${g.url}</div>
-        </div>
-        ${favs.includes(g.url) ? '<div class="result-fav"><i class="fas fa-star"></i></div>' : ''}
-      </div>
-    `).join('');
-
-    results.querySelectorAll('.search-result-item').forEach(item => {
-      item.addEventListener('click', () => {
-        toggleSearch();
-        openGameFromFeatured(item.dataset.url, item.dataset.name);
-      });
-    });
-  });
-
-  input.addEventListener('keydown', (e) => {
-    const items = results.querySelectorAll('.search-result-item');
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      selectedSearchIndex = Math.min(selectedSearchIndex + 1, items.length - 1);
-      updateSelected(items);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      selectedSearchIndex = Math.max(selectedSearchIndex - 1, -1);
-      updateSelected(items);
-    } else if (e.key === 'Enter' && selectedSearchIndex >= 0) {
-      e.preventDefault();
-      const item = items[selectedSearchIndex];
-      if (item) {
-        toggleSearch();
-        openGameFromFeatured(item.dataset.url, item.dataset.name);
-      }
-    } else if (e.key === 'Escape') {
-      toggleSearch();
-    }
-  });
-}
-
-function updateSelected(items) {
-  items.forEach((item, i) => item.classList.toggle('selected', i === selectedSearchIndex));
-  if (selectedSearchIndex >= 0 && items[selectedSearchIndex]) {
-    items[selectedSearchIndex].scrollIntoView({ block: 'nearest' });
-  }
-}
-
-function toggleSearch() {
-  const overlay = $('searchOverlay');
-  const isOpen = overlay.classList.contains('active');
-  if (isOpen) {
-    overlay.classList.remove('active');
-    $('globalSearchInput').value = '';
-    $('searchResults').innerHTML = '<div class="search-hint"><i class="fas fa-keyboard"></i><span>Start typing to search games</span></div>';
-  } else {
-    overlay.classList.add('active');
-    setTimeout(() => $('globalSearchInput').focus(), 100);
-  }
-}
-
-// ============================
-// Theme
-// ============================
 function initTheme() {
   const theme = store.get('theme') || 'dark';
   document.body.setAttribute('data-theme', theme);
@@ -761,16 +339,20 @@ function initTheme() {
       document.body.setAttribute('data-theme', btn.dataset.theme);
       store.set('theme', btn.dataset.theme);
       updateThemeBtns(btn.dataset.theme);
-      showToast('success', 'Theme Changed', `Switched to ${btn.dataset.theme}`);
       const iframe = $('gamesIframe');
       if (iframe && iframe.contentWindow) {
-        try { iframe.contentWindow.postMessage({ type: 'theme', theme: btn.dataset.theme }, '*'); } catch(e) {}
+        try {
+          iframe.contentWindow.postMessage({ type: 'theme', theme: btn.dataset.theme }, '*');
+        } catch(e) {}
       }
     });
   });
 
+  // sync theme to iframe after it loads
   $('gamesIframe').addEventListener('load', () => {
-    try { $('gamesIframe').contentWindow.postMessage({ type: 'theme', theme: document.body.getAttribute('data-theme') || 'dark' }, '*'); } catch(e) {}
+    try {
+      $('gamesIframe').contentWindow.postMessage({ type: 'theme', theme: document.body.getAttribute('data-theme') || 'dark' }, '*');
+    } catch(e) {}
   });
 }
 
@@ -778,9 +360,6 @@ function updateThemeBtns(active) {
   $all('.theme-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.theme === active));
 }
 
-// ============================
-// Cloak
-// ============================
 function initCloak() {
   const cloak = store.get('cloak') || 'default';
   applyCloak(cloak);
@@ -790,7 +369,6 @@ function initCloak() {
       applyCloak(btn.dataset.cloak);
       $all('.cloak-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      showToast('success', 'Tab Cloaked', `Now showing as ${btn.dataset.cloak === 'default' ? 'sight.w' : btn.textContent.trim()}`);
     });
   });
 }
@@ -800,8 +378,9 @@ function applyCloak(cloak) {
   if (!c) return;
   document.title = c.title;
   const existing = document.getElementById('favicon');
-  if (existing) existing.href = c.favicon;
-  else {
+  if (existing) {
+    existing.href = c.favicon;
+  } else {
     const link = document.createElement('link');
     link.id = 'favicon';
     link.rel = 'icon';
@@ -811,9 +390,6 @@ function applyCloak(cloak) {
   }
 }
 
-// ============================
-// Settings
-// ============================
 function initSettings() {
   // FPS Booster
   const fps = store.get('fpsBooster') !== 'false';
@@ -823,7 +399,6 @@ function initSettings() {
     const on = $('toggleFpsBooster').classList.toggle('on');
     document.body.classList.toggle('fps-boost-mode', on);
     store.set('fpsBooster', on);
-    showToast('info', 'FPS Booster', on ? 'Animations disabled for performance' : 'Animations enabled');
   };
 
   // Stats
@@ -844,16 +419,14 @@ function initSettings() {
     const on = $('toggleBlur').classList.toggle('on');
     document.body.setAttribute('data-blur', on ? 'true' : 'false');
     store.set('blur', on);
-    showToast('info', 'Blur Effects', on ? 'Blur enabled' : 'Blur disabled');
   };
 
-  // Bypass
+  // Bypass buttons
   $('aboutBlankBtn').onclick = () => {
     const win = window.open('about:blank', '_blank');
     if (win) {
       win.document.write(`<!DOCTYPE html><html><head><title>Classroom</title></head><body style="margin:0"><iframe src="${location.href}" style="width:100%;height:100vh;border:none"></iframe></body></html>`);
       win.document.close();
-      showToast('success', 'about:blank', 'Opened in new tab');
     }
   };
 
@@ -880,8 +453,6 @@ function initSettings() {
       panicKey = e.key.toUpperCase();
       store.set('panicKey', panicKey);
       $('panicKeyDisplay').textContent = panicKey;
-      $('shortcutPanicDisplay').textContent = panicKey;
-      showToast('success', 'Panic Key Set', `Press ${panicKey} to panic`);
     };
     document.addEventListener('keydown', handler);
   };
@@ -896,7 +467,7 @@ function initSettings() {
     store.set('animations', on);
   };
 
-  // Compact
+  // Compact mode
   const compact = store.get('compact') === 'true';
   $('toggleCompact').classList.toggle('on', compact);
   document.body.classList.toggle('compact-mode', compact);
@@ -906,23 +477,13 @@ function initSettings() {
     store.set('compact', on);
   };
 
-  // Particles
-  const particles = store.get('particles') !== 'false';
-  $('toggleParticles').classList.toggle('on', particles);
-  document.body.classList.toggle('no-particles', !particles);
-  $('toggleParticles').onclick = () => {
-    const on = $('toggleParticles').classList.toggle('on');
-    document.body.classList.toggle('no-particles', !on);
-    store.set('particles', on);
-  };
-
-  // Clear History
+  // Clear history
   $('toggleClearHistory').onclick = () => {
     const on = $('toggleClearHistory').classList.toggle('on');
     store.set('clearHistory', on);
   };
 
-  // Stealth
+  // Stealth mode
   const stealth = store.get('stealth') === 'true';
   $('toggleStealth').classList.toggle('on', stealth);
   document.body.classList.toggle('stealth-mode', stealth);
@@ -932,9 +493,9 @@ function initSettings() {
     store.set('stealth', on);
   };
 
-  // Reset
+  // Reset all
   $('resetAllBtn').onclick = () => {
-    if (confirm('Reset all settings?')) {
+ if (confirm('Reset all settings?')) {
       localStorage.clear();
       location.reload();
     }
@@ -948,7 +509,6 @@ function initSettings() {
   $('copyEmbedBtn').onclick = () => {
     navigator.clipboard.writeText($('embedCode').value);
     $('copyEmbedBtn').textContent = 'Copied!';
-    showToast('success', 'Copied', 'Embed code copied to clipboard');
     setTimeout(() => $('copyEmbedBtn').textContent = 'Copy to Clipboard', 1500);
   };
 
@@ -967,27 +527,15 @@ function triggerPanic() {
   setTimeout(() => location.href = 'https://classroom.google.com', 800);
 }
 
-// ============================
-// Games
-// ============================
 function initGames() {
   renderGames();
 
-  $('gamesSearchInput').addEventListener('input', (e) => {
+  $('gamesSearchInput').oninput = (e) => {
     const q = e.target.value.toLowerCase();
-    applyGameFilter(q, currentFilter);
-  });
-
-  // Filter tabs
-  $all('.filter-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      $all('.filter-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      currentFilter = tab.dataset.filter;
-      const q = $('gamesSearchInput').value.toLowerCase();
-      applyGameFilter(q, currentFilter);
+    $all('.game-card').forEach(card => {
+      card.style.display = card.querySelector('p').textContent.toLowerCase().includes(q) ? '' : 'none';
     });
-  });
+  };
 
   $('firstGamesBtn').onclick = () => {
     $('gamesMenu').style.display = 'none';
@@ -1017,8 +565,6 @@ function initGames() {
   $('gamePlayerBack').onclick = () => {
     $('gamePlayerView').classList.remove('active');
     $('gamePlayerIframe').src = '';
-    currentGameUrl = '';
-    currentGameName = '';
     $('secondGamesContainer').style.display = 'block';
   };
 
@@ -1026,14 +572,6 @@ function initGames() {
     const src = $('gamePlayerIframe').src;
     $('gamePlayerIframe').src = '';
     $('gamePlayerIframe').src = src;
-    showToast('info', 'Reloading', 'Game is reloading...');
-  };
-
-  $('gamePlayerFav').onclick = () => {
-    if (currentGameUrl) {
-      toggleFavorite(currentGameUrl);
-      updateFavButtons();
-    }
   };
 
   $('gamePlayerEmbed').onclick = () => {
@@ -1041,7 +579,7 @@ function initGames() {
     $('embedCode').value = `<iframe src="${GAME_BASE}/${currentGameUrl}/" width="100%" height="600" frameborder="0" allowfullscreen></iframe>`;
   };
 
-  $('gamePlayerIframe').addEventListener('load', () => setTimeout(() => $('gamePlayerLoading').classList.add('hidden'), 500));
+  $('gamePlayerIframe').onload = () => setTimeout(() => $('gamePlayerLoading').classList.add('hidden'), 500);
 
   $('gamesBack').onclick = () => {
     $('gamesIframeContainer').style.display = 'none';
@@ -1053,8 +591,6 @@ function initGames() {
     $('gamesBack').style.display = 'none';
     $('gamesReload').style.display = 'none';
     $('gamesIframe').src = '';
-    currentGameUrl = '';
-    currentGameName = '';
   };
 
   $('gamesReload').onclick = () => {
@@ -1068,77 +604,26 @@ function initGames() {
   };
 }
 
-function applyGameFilter(searchQuery, filter) {
-  const favs = getFavorites();
-  $all('.game-card').forEach(card => {
-    const name = card.querySelector('p').textContent.toLowerCase();
-    const url = card.dataset.url;
-    let showBySearch = !searchQuery || name.includes(searchQuery);
-    let showByFilter = true;
-
-    if (filter === 'favorites') {
-      showByFilter = favs.includes(url);
-    } else if (filter !== 'all') {
-      const firstLetter = name.charAt(0);
-      const ranges = {
-        'a-e': /[a-e]/i,
-        'f-j': /[f-j]/i,
-        'k-o': /[k-o]/i,
-        'p-t': /[p-t]/i,
-        'u-z': /[u-z]/i
-      };
-      if (ranges[filter]) {
-        showByFilter = ranges[filter].test(firstLetter);
-      }
-    }
-
-    card.style.display = (showBySearch && showByFilter) ? '' : 'none';
-  });
-}
-
 function renderGames() {
-  const favs = getFavorites();
-  $('gamesGrid').innerHTML = gamesData.map(g => {
-    const isFav = favs.includes(g.url);
-    return `
-      <div class="game-card" data-url="${g.url}" data-name="${g.name}">
-        <div class="game-card-fav ${isFav ? 'is-fav' : ''}" data-fav-url="${g.url}">
-          <i class="${isFav ? 'fas' : 'far'} fa-star"></i>
-        </div>
-        <img src="${GAME_BASE}/${g.url}/${g.image}" alt="${g.name}" loading="lazy" onerror="this.style.display='none'">
-        <p>${g.name}</p>
-      </div>
-    `;
-  }).join('');
+  $('gamesGrid').innerHTML = gamesData.map(g => `
+    <div class="game-card" data-url="${g.url}" data-name="${g.name}">
+      <img src="${GAME_BASE}/${g.url}/${g.image}" alt="${g.name}" loading="lazy" onerror="this.style.display='none'">
+      <p>${g.name}</p>
+    </div>
+  `).join('');
 
-  // Click handlers for game cards
   $all('.game-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      if (e.target.closest('.game-card-fav')) return;
+    card.onclick = () => {
       currentGameUrl = card.dataset.url;
-      currentGameName = card.dataset.name;
       $('gamePlayerTitle').textContent = card.dataset.name;
       $('secondGamesContainer').style.display = 'none';
       $('gamePlayerView').classList.add('active');
       $('gamePlayerLoading').classList.remove('hidden');
       $('gamePlayerIframe').src = `${GAME_BASE}/${currentGameUrl}/`;
-      updateFavButtons();
-    });
-  });
-
-  // Click handlers for favorite buttons on cards
-  $all('.game-card-fav').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleFavorite(btn.dataset.favUrl);
-      updateFavButtons();
-    });
+    };
   });
 }
 
-// ============================
-// Navigation
-// ============================
 function initNav() {
   function show(page) {
     $('homePage').style.display = 'none';
@@ -1152,7 +637,6 @@ function initNav() {
     if (page === 'home') {
       $('homePage').style.display = 'flex';
       $('homeLink').classList.add('active');
-      updateGreeting();
     } else if (page === 'games') {
       $('gamesPage').classList.add('active');
       $('gamesLink').classList.add('active');
@@ -1163,13 +647,10 @@ function initNav() {
       $('gamePlayerView').classList.remove('active');
       $('gamesIframe').src = '';
       $('gamePlayerIframe').src = '';
-      currentGameUrl = '';
-      currentGameName = '';
-      renderGames(); // Re-render to update fav states
     } else if (page === 'movies') {
       $('moviesPage').classList.add('active');
       $('moviesLink').classList.add('active');
-      if (!$('moviesIframe').src) $('moviesIframe').src = 'https://www.fmovies.gd/home';
+      $('moviesIframe').src = 'https://www.fmovies.gd/home';
     } else if (page === 'chat') {
       $('chatPage').classList.add('active');
       $('chatLink').classList.add('active');
@@ -1215,55 +696,16 @@ function initNav() {
   }
 }
 
-// ============================
-// Keyboard Shortcuts
-// ============================
 let panicKey = (store.get('panicKey') || 'P').toUpperCase();
 $('panicKeyDisplay').textContent = panicKey;
-$('shortcutPanicDisplay').textContent = panicKey;
 
 function initKeys() {
-  document.addEventListener('keydown', (e) => {
+  document.onkeydown = (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-
-    // Ctrl+K = Search
-    if (e.ctrlKey && e.key === 'k') {
-      e.preventDefault();
-      toggleSearch();
-      return;
-    }
-
-    // Ctrl+B = Toggle Sidebar
-    if (e.ctrlKey && e.key === 'b') {
-      e.preventDefault();
-      const collapsed = $('sidebar').classList.contains('collapsed');
-      if (collapsed) {
-        $('sidebar').classList.remove('collapsed');
-        $('sidebarOpenBtn').classList.remove('visible');
-        $('mainWrapper').classList.remove('expanded');
-      } else {
-        $('sidebar').classList.add('collapsed');
-        $('sidebarOpenBtn').classList.add('visible');
-        $('mainWrapper').classList.add('expanded');
-      }
-      return;
-    }
-
-    // Ctrl+H = Home
-    if (e.ctrlKey && e.key === 'h') {
-      e.preventDefault();
-      $('homeLink').click();
-      return;
-    }
-
-    // Panic key
     if (e.key.toUpperCase() === panicKey) triggerPanic();
-  });
+  };
 }
 
-// ============================
-// Pointer Lock
-// ============================
 function initPointerLock() {
   document.addEventListener('pointerlockchange', () => {
     if ($('pointerLockHint')) {
@@ -1272,9 +714,6 @@ function initPointerLock() {
   });
 }
 
-// ============================
-// Stats
-// ============================
 function initStats() {
   let last = performance.now(), frames = 0;
   function fps() {
@@ -1314,9 +753,6 @@ function initStats() {
   }
 }
 
-// ============================
-// Time
-// ============================
 function updateTime() {
   const now = new Date();
   $('time').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
